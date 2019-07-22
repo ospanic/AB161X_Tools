@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.572
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AB161X_Tools", "AB161X_Tools\AB161X_Tools.csproj", "{EE396538-E9D8-4DF4-8424-4639EFC8A9C6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AB161X_Tools_Console", "AB161X_Tools\AB161X_Tools_Console.csproj", "{EE396538-E9D8-4DF4-8424-4639EFC8A9C6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AB161X_Tools_Form", "AB161X_Tools_Form\AB161X_Tools_Form.csproj", "{D5A4CFB3-035F-4CB5-9EBC-E224C7B1C54C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{EE396538-E9D8-4DF4-8424-4639EFC8A9C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EE396538-E9D8-4DF4-8424-4639EFC8A9C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EE396538-E9D8-4DF4-8424-4639EFC8A9C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5A4CFB3-035F-4CB5-9EBC-E224C7B1C54C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5A4CFB3-035F-4CB5-9EBC-E224C7B1C54C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5A4CFB3-035F-4CB5-9EBC-E224C7B1C54C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5A4CFB3-035F-4CB5-9EBC-E224C7B1C54C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
