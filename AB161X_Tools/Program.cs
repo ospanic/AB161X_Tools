@@ -78,6 +78,30 @@ namespace AB161X_Tools_Console
             Console.ReadKey();
         }
 
+        public static string ToHexString(byte[] bytes) // 0xae00cf => "AE00CF "
+        {
+            string hexString = string.Empty;
+
+            if (bytes != null)
+
+            {
+
+                StringBuilder strB = new StringBuilder();
+
+                for (int i = 0; i < bytes.Length; i++)
+
+                {
+
+                    strB.Append(bytes[i].ToString("X2"));
+
+                }
+
+                hexString = strB.ToString();
+
+            }
+            return hexString;
+        }
+
         static void erase_flash()
         {
             AB161X_Tools ab_tools = new AB161X_Tools(_sp);
@@ -95,16 +119,17 @@ namespace AB161X_Tools_Console
         static void write_flash(string[] args)
         {
             byte[] write_buff = new byte[256];
-            byte[] calcu_buff = new byte[0x1000 * 16];
+            byte[] calcu_buff = new byte[0x1000];
 
-            if (args.Length != 4)
+            //AB1611_Tools com3 write_flash test.bin
+            if (args.Length != 3)
             {
                 Console.WriteLine("Paras is too few!!!");
                 Console.WriteLine("Use: AB161X_Tools.exe comXX write_flash <addr> <file name>");
                 return;
             }
 
-            if (!File.Exists(args[3]))
+            if (!File.Exists(args[2]))
             {
                 Console.WriteLine("Error: File {0} do not exist!!!");
                 return;
@@ -118,43 +143,53 @@ namespace AB161X_Tools_Console
                 return;
             }
 
-            //for (long i = 0x1000; i < 0x10000; i += 0x100)
-            //{
-            //    ab_tools.read_flash(i, AB161X_Tools.Flash_Length.LEN_256B, write_buff);
-            //    write_buff.CopyTo(calcu_buff, i - 0x1000);
-            //}
+            long bak_len = 0x1000;
+            Console.Write("Backup Calibration Data ... ... ");
+
+            for (long i = 0x1000; i < 0x1000 + bak_len; i += 0x100)
+            {
+                ab_tools.read_flash(i, AB161X_Tools.Flash_Length.LEN_256B, write_buff);
+                write_buff.CopyTo(calcu_buff, i - 0x1000);
+            }
+            Console.WriteLine("OK");
 
             Thread.Sleep(100);
             Console.Write("Erase flash ... ... ");
-            ab_tools.erase_flash();
-            Thread.Sleep(500);
-            Console.WriteLine("OK");
 
-            if (!ab_tools.connect_chip())
+            if (ab_tools.erase_flash() != 0)
             {
-                Console.WriteLine("connect fail");
+                Console.WriteLine(" Fail!!!");
                 return;
             }
 
-            //for (long i = 0x1000; i < 0x10000; i += 0x100)
-            //{
-            //    Array.Copy(calcu_buff, i - 0x1000, write_buff, 0, 0x100);
-            //    ab_tools.write_flash(i, 0, write_buff);
-            //}
+            Thread.Sleep(2000);
+            Console.WriteLine("OK");
 
-            FileStream fs = new FileStream(args[3], FileMode.Open);
+            FileStream fs = new FileStream(args[2], FileMode.Open);
             long file_length = fs.Length;
 
             for (long i = 0; i < file_length; i += 0x100)
             {
-               // if ((i >= 0x1000) && (i < 0x2000)) continue;
+                if ((i >= 0x1000) && (i < 0x1000 + bak_len))
+                {
+                    Array.Copy(calcu_buff, i - 0x1000, write_buff, 0, 0x100);
+                    ab_tools.write_flash(i, 0, write_buff);
+
+                    fs.Read(write_buff, 0, 0x100);
+                    continue;
+                }
 
                 int read_len = fs.Read(write_buff, 0, 0x100);
-                ab_tools.write_flash(i, 0, write_buff);
+
+                if (ab_tools.write_flash(i, 0, write_buff) != 0) //写数据出错
+                {
+                    Console.Write("Write flash fail");
+                    break;
+                }
 
                 if (i % 0x1000 == 0)
                 {
-                    Console.Write("\rHave write:{0}% ... ", i * 100 / file_length);
+                    Console.Write("\rWrite flash:{0}% ... ", i * 100 / file_length);
                 }
             }
 
@@ -192,9 +227,15 @@ namespace AB161X_Tools_Console
 
             Console.WriteLine("Will frome addr {1} read {0} bytes  to file {2}", length.ToString("x4"), addr.ToString("x8"), args[4]);
 
-            for (long i = 0; i < length; i += 0x100)
+            long i = 0;
+            for (; i < length; i += 0x100)
             {
-                ab_tools.read_flash(addr, AB161X_Tools.Flash_Length.LEN_256B, a);
+                if (ab_tools.read_flash(addr, AB161X_Tools.Flash_Length.LEN_256B, a) != 256)
+                {
+                    Console.WriteLine("Read flash Fail");
+                    break;
+                }
+
                 addr   += 0x100;
                 fs.Write(a, 0, 0x100);
 
@@ -204,9 +245,12 @@ namespace AB161X_Tools_Console
                 }
             }
 
-            Console.Write("\rRead flah Compect!!!");
-            fs.Flush();
-            fs.Close();
+            if (length - i < 0x100)
+            {
+                Console.Write("\rRead flash Compect!!!");
+                fs.Flush();
+                fs.Close();
+            }
             _sp.Close();
         }
     }

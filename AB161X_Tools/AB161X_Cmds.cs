@@ -130,11 +130,40 @@ namespace AB161X_Tools_Console
             }
             catch (Exception) { }
 
-            return 0;
+            int have_read = 0;  //已经读出的数据
+            int need_read = 7; //还需要读出的数据
+
+            DateTime dt = DateTime.UtcNow;
+            while ((need_read - have_read > 0) && (((TimeSpan)(DateTime.UtcNow - dt)).TotalSeconds < 2))
+            {
+                try
+                {
+                    have_read += _sp.Read(write_buf, have_read, need_read - have_read);
+                }
+                catch (Exception)
+                {
+                    return 0;
+                }
+            }
+
+            if ((have_read == need_read) && (write_buf[0] == 0x05) && (write_buf[1] == 0x5b) && (write_buf[4] == 0x03) && (write_buf[5] == 0x07))
+            {
+                return 0;
+            }
+
+            return -1;
         }
 
         public int write_flash(long addr, Flash_Length len, byte[] data)
         {
+            int i = 0;
+            for(; i < data.Length; i++) //判断要写入的数据是否全为0xff
+            {
+                if (data[i] != 0xff) break;
+            }
+
+            if (i == data.Length) return 0; //如果是，则不再写入，直接返回
+
             string addr_str = addr.ToString("X8");
 
             addr_str = addr_str.Substring(6, 2) + addr_str.Substring(4, 2) + addr_str.Substring(2, 2) + addr_str.Substring(0, 2);
@@ -154,7 +183,8 @@ namespace AB161X_Tools_Console
             int have_read = 0;  //已经读出的数据
             int need_read = 11; //还需要读出的数据
 
-            while (need_read - have_read > 0)
+            DateTime dt = DateTime.UtcNow;
+            while ((need_read - have_read > 0) && (((TimeSpan)(DateTime.UtcNow - dt)).TotalSeconds < 2))
             {
                 try
                 {
@@ -162,11 +192,16 @@ namespace AB161X_Tools_Console
                 }
                 catch (Exception)
                 {
-                    return 0;
+                    return -1;
                 }
             }
 
-            return 0;
+            if ((have_read == 11) && (write_buf[0] == 0x05) && (write_buf[1] == 0x5b) && (write_buf[4] == 0x07) && (write_buf[5] == 0x07))
+            {
+                return 0;
+            }
+
+            return -1;
         }
 
         public int read_flash(long addr, Flash_Length len, byte[] data)
@@ -214,7 +249,8 @@ namespace AB161X_Tools_Console
             int have_read = 0;  //已经读出的数据
             int need_read = 269;//还需要读出的数据
 
-            while (need_read - have_read > 0)
+            DateTime dt = DateTime.UtcNow;
+            while ((need_read - have_read > 0) && (((TimeSpan)(DateTime.UtcNow - dt)).TotalSeconds < 2))
             {
                 try
                 {
@@ -226,9 +262,16 @@ namespace AB161X_Tools_Console
                 }
             }
 
-            Array.Copy(read_buff, 13, data, 0, 256);
+            if ((read_buff[0] == 0x05) && (read_buff[1] == 0x5b) && (read_buff[2] == 0x09) && (read_buff[3] == 0x01) && have_read == 269)
+            {
+                Array.Copy(read_buff, 13, data, 0, 256);
 
-            return 256;
+                return 256;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public byte[] HexToByte(string hexString)
